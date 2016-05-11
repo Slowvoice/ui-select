@@ -57,6 +57,13 @@ uis.directive('uiSelectMultiple', ['uiSelectMinErr','$timeout', function(uiSelec
 
       };
 
+      ctrl.editItem = function(index) {
+        if (!$select.search) {
+          var item = $select.selected.splice(index, 1)[0];
+          $select.activate(item, true);
+        }
+      };
+
       ctrl.getPlaceholder = function(){
         //Refactor single?
         if($select.selected && $select.selected.length) return;
