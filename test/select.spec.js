@@ -204,6 +204,12 @@ describe('ui-select tests', function() {
     e.keyCode = keyCode;
     element.trigger(e);
   }
+
+  function triggerBlur(element) {
+    var e = jQuery.Event("blur");
+    element.trigger(e);
+  }
+
   function triggerPaste(element, text, isClipboardEvent) {
     var e = jQuery.Event("paste");
     if (isClipboardEvent) {
@@ -1425,6 +1431,46 @@ describe('ui-select tests', function() {
     triggerKeydown(searchInput, Key.Enter);
 
     expect($(el).scope().$select.selected).toEqual(['idontexist']);
+  });
+
+  it('should allow creating tag on blur in multiple select mode with tagging-on-blur enabled', function() {
+
+    var el = compileTemplate(
+        '<ui-select multiple tagging tagging-label="false" tagging-on-blur ng-model="selection.selected" theme="bootstrap" sortable="true" ng-disabled="disabled" style="width: 300px;" title="Choose a color"> \
+          <ui-select-match placeholder="Pick one...">{{$select.selected.name}}</ui-select-match> \
+          <ui-select-choices repeat="item in []"> \
+            {{item}} \
+          </ui-select-choices> \
+        </ui-select>'
+    );
+
+    clickMatch(el);
+    var searchInput = el.find('.ui-select-search');
+    searchInput.click();
+    setSearchText(el, 'should be created on blur');
+    triggerBlur(searchInput);
+
+    expect($(el).scope().$select.selected).toEqual(['should be created on blur']);
+  });
+
+  it('should not create tag on blur in multiple select mode with tagging-on-blur disabled', function() {
+
+    var el = compileTemplate(
+        '<ui-select multiple tagging tagging-label="false" ng-model="selection.selected" theme="bootstrap" sortable="true" ng-disabled="disabled" style="width: 300px;" title="Choose a color"> \
+          <ui-select-match placeholder="Pick one...">{{$select.selected.name}}</ui-select-match> \
+          <ui-select-choices repeat="item in []"> \
+            {{item}} \
+          </ui-select-choices> \
+        </ui-select>'
+    );
+
+    clickMatch(el);
+    var searchInput = el.find('.ui-select-search');
+    searchInput.click();
+    setSearchText(el, 'should not be created on blur');
+    triggerBlur(searchInput);
+
+    expect($(el).scope().$select.selected).toEqual([]);
   });
 
   it('should remove a choice when multiple and remove-selected is not given (default is true)', function () {

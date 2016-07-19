@@ -143,6 +143,11 @@ uis.directive('uiSelect',
           }
         });
 
+        //check if tagging-on-blur is enabled
+        attrs.$observe('taggingOnBlur', function () {
+          $select.taggingOnBlur = angular.isDefined(attrs.taggingOnBlur);
+        });
+
         //Automatically gets focus when loaded
         if (angular.isDefined(attrs.autofocus)){
           $timeout(function(){
@@ -183,7 +188,7 @@ uis.directive('uiSelect',
             } else {
               skipFocusser = true;
             }
-            $select.close(skipFocusser);
+            $select.close(skipFocusser, {resetSearchInput: !$select.taggingOnBlur});
             scope.$digest();
           }
           $select.clickTriggeredSelect = false;

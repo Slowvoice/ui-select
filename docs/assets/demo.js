@@ -173,6 +173,7 @@ app.controller('DemoCtrl', function ($scope, $http, $timeout, $interval) {
   vm.multipleDemo = {};
   vm.multipleDemo.colors = ['Blue','Red'];
   vm.multipleDemo.colors2 = ['Blue','Red'];
+  vm.multipleDemo.colors3 = ['Blue','Red'];
   vm.multipleDemo.selectedPeople = [vm.people[5], vm.people[4]];
   vm.multipleDemo.selectedPeople2 = vm.multipleDemo.selectedPeople;
   vm.multipleDemo.selectedPeopleWithGroupBy = [vm.people[8], vm.people[6]];

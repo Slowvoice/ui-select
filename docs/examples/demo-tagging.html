@@ -28,6 +28,16 @@
   <p>Selected: {{ctrl.multipleDemo.colors2}}</p>
   <hr>
 
+  <h3>Simple String Tags <small>(create tag on blur)</small></h3>
+  <ui-select multiple tagging tagging-label="false" tagging-on-blur ng-model="ctrl.multipleDemo.colors3" theme="bootstrap" ng-disabled="ctrl.disabled" style="width: 300px;" title="Choose a color">
+    <ui-select-match placeholder="Select colors...">{{$item}}</ui-select-match>
+    <ui-select-choices repeat="color in ctrl.availableColors | filter:$select.search">
+      {{color}}
+    </ui-select-choices>
+  </ui-select>
+  <p>Selected: {{ctrl.multipleDemo.colors3}}</p>
+  <hr>
+
   <h3>Object Tags <small>(with grouping)</small></h3>
   <ui-select multiple tagging="ctrl.tagTransform" ng-model="ctrl.multipleDemo.selectedPeople" theme="bootstrap" ng-disabled="ctrl.disabled" style="width: 800px;" title="Choose a person">
     <ui-select-match placeholder="Select person...">{{$item.name}} &lt;{{$item.email}}&gt;</ui-select-match>
