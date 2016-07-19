@@ -1,7 +1,7 @@
 /*!
  * ui-select
  * http://github.com/angular-ui/ui-select
- * Version: 0.18.1 - 2016-07-10T00:18:10.535Z
+ * Version: 0.18.1 - 2016-07-19T07:04:58.807Z
  * License: MIT
  */
 
@@ -172,31 +172,6 @@ var uis = angular.module('ui.select', [])
       height: boundingClientRect.height || element.prop('offsetHeight'),
       top: boundingClientRect.top + ($window.pageYOffset || $document[0].documentElement.scrollTop),
       left: boundingClientRect.left + ($window.pageXOffset || $document[0].documentElement.scrollLeft)
-    };
-  };
-}]);
-
-/**
- * Debounces functions
- *
- * Taken from UI Bootstrap $$debounce source code
- * See https://github.com/angular-ui/bootstrap/blob/master/src/debounce/debounce.js
- *
- */
-uis.factory('$$uisDebounce', ['$timeout', function($timeout) {
-  return function(callback, debounceTime) {
-    var timeoutPromise;
-
-    return function() {
-      var self = this;
-      var args = Array.prototype.slice.call(arguments);
-      if (timeoutPromise) {
-        $timeout.cancel(timeoutPromise);
-      }
-
-      timeoutPromise = $timeout(function() {
-        callback.apply(self, args);
-      }, debounceTime);
     };
   };
 }]);
@@ -729,10 +704,15 @@ uis.controller('uiSelectCtrl',
   };
 
   // Closes the dropdown
-  ctrl.close = function(skipFocusser) {
+  ctrl.close = function(skipFocusser, options) {
+    if (options === undefined) options = {};
+    if (options.resetSearchInput === undefined) options.resetSearchInput = true;
+
     if (!ctrl.open) return;
     if (ctrl.ngModel && ctrl.ngModel.$setTouched) ctrl.ngModel.$setTouched();
-    _resetSearchInput();
+    if(options.resetSearchInput) {
+      _resetSearchInput();
+    }
     ctrl.open = false;
 
     $scope.$broadcast('uis:close', skipFocusser);
@@ -933,6 +913,18 @@ uis.controller('uiSelectCtrl',
       e.stopPropagation();
     }
 
+  });
+
+  //Allow tagging on blur
+  ctrl.searchInput.on('blur', function () {
+    if ((ctrl.items.length > 0 || ctrl.tagging.isActivated) && ctrl.taggingOnBlur) {
+      ctrl.searchInput.triggerHandler('tagged');
+      var newItem = ctrl.search;
+      if (ctrl.tagging.fct) {
+        newItem = ctrl.tagging.fct(newItem);
+      }
+      if (newItem) ctrl.select(newItem, true);
+    }
   });
 
   ctrl.searchInput.on('paste', function (e) {
@@ -1169,6 +1161,11 @@ uis.directive('uiSelect',
           }
         });
 
+        //check if tagging-on-blur is enabled
+        attrs.$observe('taggingOnBlur', function () {
+          $select.taggingOnBlur = angular.isDefined(attrs.taggingOnBlur);
+        });
+
         //Automatically gets focus when loaded
         if (angular.isDefined(attrs.autofocus)){
           $timeout(function(){
@@ -1209,7 +1206,7 @@ uis.directive('uiSelect',
             } else {
               skipFocusser = true;
             }
-            $select.close(skipFocusser);
+            $select.close(skipFocusser, {resetSearchInput: !$select.taggingOnBlur});
             scope.$digest();
           }
           $select.clickTriggeredSelect = false;
@@ -1386,6 +1383,8 @@ uis.directive('uiSelect',
           });
         };
 
+        var opened = false;
+        
         scope.calculateDropdownPos = function() {
           if ($select.open) {
             dropdown = angular.element(element).querySelectorAll('.ui-select-dropdown');
@@ -1394,8 +1393,11 @@ uis.directive('uiSelect',
               return;
             }
 
-            // Hide the dropdown so there is no flicker until $timeout is done executing.
-            dropdown[0].style.opacity = 0;
+           // Hide the dropdown so there is no flicker until $timeout is done executing.
+           if ($select.search === '' && !opened) {
+              dropdown[0].style.opacity = 0;
+              opened = true;
+           }
 
             if (!uisOffset(dropdown).height && $select.$animate && $select.$animate.on && $select.$animate.enabled(dropdown)) {
               var needsCalculated = true;
@@ -2220,6 +2222,31 @@ uis.directive('uiSelectSort', ['$timeout', 'uiSelectConfig', 'uiSelectMinErr', f
 }]);
 
 /**
+ * Debounces functions
+ *
+ * Taken from UI Bootstrap $$debounce source code
+ * See https://github.com/angular-ui/bootstrap/blob/master/src/debounce/debounce.js
+ *
+ */
+uis.factory('$$uisDebounce', ['$timeout', function($timeout) {
+  return function(callback, debounceTime) {
+    var timeoutPromise;
+
+    return function() {
+      var self = this;
+      var args = Array.prototype.slice.call(arguments);
+      if (timeoutPromise) {
+        $timeout.cancel(timeoutPromise);
+      }
+
+      timeoutPromise = $timeout(function() {
+        callback.apply(self, args);
+      }, debounceTime);
+    };
+  };
+}]);
+
+/**
  * Parses "repeat" attribute.
  *
  * Taken from AngularJS ngRepeat source code
@@ -2298,7 +2325,7 @@ uis.service('uisRepeatParser', ['uiSelectMinErr','$parse', function(uiSelectMinE
   };
 
   self.getGroupNgRepeatExpression = function() {
-    return '$group in $select.groups';
+    return '$group in $select.groups track by $group.name';
   };
 
 }]);
